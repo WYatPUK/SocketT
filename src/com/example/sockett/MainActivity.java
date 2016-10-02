@@ -22,9 +22,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	String IP_addr = "";
 	int Port = 30002;
+	String name;
+	String password;
 	
 	TextView show;
 	EditText IP;
+	EditText Name;
+	EditText Password;
 	Handler mhandler = new Handler();
 	
 	@Override
@@ -34,32 +38,46 @@ public class MainActivity extends Activity implements OnClickListener {
 		show = (TextView) this.findViewById(R.id.show);
 		IP = (EditText) this.findViewById(R.id.edit_IP);
 		IP_addr = IP.getText().toString();
-		this.findViewById(R.id.send).setOnClickListener(this);
+		Name = (EditText) this.findViewById(R.id.user_name);
+		Password = (EditText) this.findViewById(R.id.user_password);
 		this.findViewById(R.id.save_IP).setOnClickListener(this);
+		this.findViewById(R.id.login).setOnClickListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
 		// TODO Auto-generated method stub
 		switch (v.getId()) {
-		case R.id.send:
-			Ask_Server("Hello, I'm Android!");
-			break;
 		case R.id.save_IP:
 			IP_addr = IP.getText().toString();
 			break;
+		case R.id.login:
+			name = Name.getText().toString();
+			password = Password.getText().toString();
+			if (!name.isEmpty() && !password.isEmpty()) {
+				Ask_Server("Register:" + name + '#' + password, "login");
+			} else {
+				this.Make_Toast("Name or Password not been input");
+			}
+			break;
 		}
+		
 	}
 	
-	public void Server_CB (final String re) {
+	public void Server_CB (final String re, final String state) {
 		mhandler.post(new Runnable(){
 			@Override
 			public void run() {
-				show.setText("from server: " + re);
+				if (state == "login") {
+					show.setText("login: " + re);
+				}
+				else {
+					show.setText("from server: " + re);
+				}
 			}});
 	}
 	
-	public void Ask_Server(final String msg) {
+	public void Ask_Server(final String msg, final String state) {
 		new Thread() {
 			@Override
 			public void run() {
@@ -73,7 +91,7 @@ public class MainActivity extends Activity implements OnClickListener {
 					br.close();
 					os.close();
 					socket.close();
-					Server_CB(re);
+					Server_CB(re, state);
 				} catch (SocketTimeoutException e) {
 					//Timeout
 					mhandler.post(new Runnable(){
@@ -92,6 +110,15 @@ public class MainActivity extends Activity implements OnClickListener {
 				}
 			}
 		}.start();
+	}
+	
+	private void Make_Toast(final String msg) {
+		mhandler.post(new Runnable(){
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
+			}});
 	}
 	
 }
